@@ -1,0 +1,94 @@
+= Neovim plugin for editing Lisp and Scheme files
+
+This is a Neovim native-Lua implementation of the Scheme/Lisp
+indenter of https://github.com/ds26gte/scmindent (see description
+there). It doesn't require any external programs.
+
+== Installation
+
+This package contains the files
+
+  autoload/scmindent.vim
+  lua/scmindent.lua
+
+Copy them to the `autoload` and `lua` subdirectories respectively,
+somewhere in your Neovim `'runtimepath'` (typically,
+`~/.config/nvim/autoload` and `~/config/nvim/lua`).
+
+Alternatively: create a directory `neo-scmindent/start` in the
+`pack` subdirectory somewhere in your `'runtimepath'` (typically,
+`~/.config/nvim/pack`). Clone this repo into that directory
+(typically `~/.config/nvim/pack/neo-scmindent/start`). 
+
+See `:help packages` for info on how to clone Vim packages from
+GitHub into your Neovim runtimepath. It's not difficult, and you
+don't really need a 3rd-party plugin manager (which I expect
+would work too, although I've never tried.)
+
+To have a Scheme/Lisp file use this indenter, set its local
+option `'indentexpr'` (aka `'inde'`) as follows:
+
+  setl inde=scmindent#GetScmIndent(v:lnum)
+
+For convenience, this can be done either through an indent file
+for the desired filetype, or through an explicit autocommand,
+e.g., one of:
+
+  au filetype scheme setl inde=scmindent#GetScmIndent(v:lnum)
+
+  au bufread,bufnewfile *.scm setl inde=scmindent#GetScmIndent(v:lnum)
+
+Note that the option `'lisp'` overrides `'inde'`. We don't want
+this, because `'lisp'` is less featurful and occasionally buggy.
+So, ensure option `'lisp'` is _not_ set.
+
+== Customization
+
+The indenter uses keyword info from `~/.lispwords.lua`. Here is
+an example `~/.lispwords.lua`:
+
+  lispwords = {
+    ['call-with-input-file'] = 1,
+    ['case'] = 1,
+    ['do'] = 2,
+    ['do*'] = 2,
+    ['lambda'] = 1,
+    ['let'] = 1,
+    ['let*'] = 1,
+    ['letrec'] = 1,
+    ['let-values'] = 1,
+    ['unless'] = 1,
+    ['when'] = 1,
+  }
+
+As you can see, each keyword is assigned a number, which we call
+its "Lisp indent number" or LIN. Let's say a keyword `K` has a LIN
+`n`. A form `(K S1 S2 ...)` can occur either on a line by itself or
+it can be split across lines. 
+
+If the form is on a line by itself, the
+subforms need no indentation. 
+
+If it splits such that `Si` is on
+the second line, then the indentation of `Si` depends on whether
+`i` is greater than `n`.  
+
+If `i \<= n`, then `Si` is indented 3 columns past `K`.
+
+If `i > n`, then `Si` is indented just one column past `K`.
+
+The same holds true if the form is split across more than two
+lines.
+
+If a keyword is present in the option `'lispwords'` (aka
+`'lw'`), then absent an entry in `.lispwords.lua` it will be
+assumed to have a LIN of 0. Also, any keyword that starts with
+`def` is assumed to have LIN 0, unless overridden in
+`.lispwords.lua`.
+
+If a keyword is neither in `.lispwords.lua` nor in `'lispwords'`,
+it is assumed to have a LIN of `-1`. In that case, if the first
+subform is on the second line, then it and any subsequent lines
+are aligned directly under the keyword. If the first subform
+stays on the same line as the keyword, then any subsequent lines
+are aligned directly under the first subform.
