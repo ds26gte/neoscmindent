@@ -45,9 +45,10 @@ So, ensure option `'lisp'` is _not_ set.
 == Customization
 
 The indenter uses keyword info from `~/.lispwords.lua`. Here is
-an example `~/.lispwords.lua`:
+an example `~/.lispwords.lua`, a Lua file that returns a table associating
+keywords with their proposed LINs:
 
-  lispwords = {
+  return {
     ['call-with-input-file'] = 1,
     ['case'] = 1,
     ['do'] = 2,

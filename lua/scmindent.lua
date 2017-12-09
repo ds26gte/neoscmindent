@@ -3,7 +3,7 @@
 -- Dorai Sitaram
 -- last modified 2017-12-09
 
--- this script takes lines of Lisp or Scheme code from its 
+-- this script takes lines of Lisp or Scheme code from its
 -- stdin and produces an indented version thereof on its
 -- stdout
 
@@ -16,14 +16,9 @@ function file_exists(f)
   end
 end
 
-
 local lwfile = os.getenv('HOME') .. '/.lispwords.lua'
 
-if file_exists(lwfile) then 
-  dofile(lwfile)
-else
-  lispwords = {}
-end
+local lispwords = file_exists(lwfile) and dofile(lwfile) or {}
 
 function split_string(s, c)
   local r = {}
@@ -52,7 +47,7 @@ do
   end
 end
 
-function string_trim_blanks(s) 
+function string_trim_blanks(s)
   return string.gsub(string.gsub(s, '^%s+', ''), '%s+$', '')
 end
 
@@ -69,7 +64,7 @@ function lisp_indent_number(s)
   end
 end
 
-function past_next_token(s, i, n) 
+function past_next_token(s, i, n)
   local is_escape = false
   while true do
     if i > n then return i end
@@ -92,7 +87,7 @@ function past_next_token(s, i, n)
   end
 end
 
-function calc_subindent(s, i, n) 
+function calc_subindent(s, i, n)
   local j = past_next_token(s, i, n)
   local num_aligned_subforms = 0
   local left_indent
@@ -127,9 +122,9 @@ function num_leading_spaces(s)
   local i = 1
   local j = 0
   while true do
-    if i > n then return j end
+    if i > n then return 0 end
     local c = string.sub(s, i, i)
-    if c == ' ' then 
+    if c == ' ' then
       i = i+1; j = j+1
     elseif c == '\t' then
       i = i+1; j = j+8
@@ -227,16 +222,32 @@ local scmindent = {}
 scmindent.GetScmIndent = function(lnum1)
   local lnum = lnum1 - 1 -- convert to 0-based line number
   local curr_buf = vim.api.nvim_get_current_buf()
+  --
+  -- pnum is determined by going up until you cross two contiguous blank
+  -- regions (if possible), then finding the first nonblank after that.
+  --
   local pnum = lnum - 1
   if pnum < 0 then pnum = 0 end
+  local one_blank_seen = false
+  local currently_blank = false
   while pnum > 0 do
     local pstr = vim.api.nvim_buf_get_lines(curr_buf, pnum, pnum+1, 1)[1]
-    if pstr:match("^%s*$") then
-      pnum = pnum + 1
-      break
+    if pstr:match("%s*$") then
+      if currently_blank then
+        do end
+      elseif one_blank_seen then
+        pnum = pnum + 1
+        break
+      else
+        currently_blank = true
+        one_blank_seen = true
+      end
+    else
+      currently_blank = false
     end
     pnum = pnum - 1
   end
+  --
   return do_indent(curr_buf, pnum, lnum)
 end
 
