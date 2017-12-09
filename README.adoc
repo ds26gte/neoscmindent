@@ -1,8 +1,7 @@
-= Neovim plugin for editing Lisp and Scheme files
+= Neoscmindent -- indent Scheme and Lisp files in Neovim
 
-This is a Neovim native-Lua implementation of the Scheme/Lisp
-indenter of https://github.com/ds26gte/scmindent (see description
-there). It doesn't require any external programs.
+This is a Neovim native-Lua implementation of an indenting
+function for Scheme, Lisp, and similar languages.
 
 == Installation
 
@@ -44,7 +43,7 @@ packages`. E.g., again assuming
   # clone this repo there
   git clone https://github.com/ds26gte/neoscmindent
 
-Either approoach is not difficult, you don't really need a
+Either approoach is easy enough, you don't really need a
 3rd-party plugin manager, but I expect that would work too, not
 that I've tried.
 
@@ -73,16 +72,106 @@ you may not have installed. If you're using Vim, well, Scmindent
 is your only choice.)
 
 (If you're wondering why the repo doesn't provide an
-`after/indent/scheme.vim` provided, this is because Vim's
+`after/indent/scheme.vim`, this is because Vim's
 `indent/scheme.vim` takes care of loading any and all
 `indent/lisp.vim` filess that are present.)
+
+== Indentation strategy
+
+Lisp code is essentially recursive lists of ultimately atoms. We
+call these code constituents _forms_. A form, if it is a
+non-empty list, has a head subform and zero or more argument
+subforms. Thus:
+
+  (head-subform arg-subform-1 arg-subform-2 \...)
+
+Indenting Lisp code adds or removes spaces before each line so
+that the code has a quickly readable structure. Indenting does
+not change the content of a code line, and therefore, cannot add
+or remove lines. Here are the default rules for how Neoscmindent
+goes about indenting Lisp code:
+
+1: If the head subform is an atom and is followed by at least one
+other subform on its own line, then all subsequent lines in the
+form are indented to line up under the first argument subform.
+E.g.,
+
+  (some-function-1 arg1
+                   arg2
+                   \...)
+
+2: If the head subform is an atom and is on a line by itself,
+then its subsequent lines are indented one column past the
+beginning of the head atom. E.g.,
+
+  (some-function-2
+    arg1
+    arg2
+    \...)
+
+3: If the head subform is a list, then its subsequent lines are
+indented to line up under the head subform. It does not matter
+whether there are argument subforms on the same line as the head
+form or not. E.g.,
+
+  ((some-function-3 s-arg1 \...)
+   arg1
+   arg2
+   \...)
+
+4: If the head form is a literal (a non-symbolic atom, such as
+a number), then its subsequent lines are indented to line up
+directly under the head literal. It does not matter whether there
+are argument subforms on the same line as the head form or not. E.g.,
+
+  (1 2 3
+   4 5 6)
+
+  '(alpha
+    beta
+    gamma)
+
+(In the last example, the list is quoted, so its elements are
+considered literal, even though in general `alpha` would not be a
+literal.)
+
+If this were all there is to it, it would make for rather boring
+indentation. So there is one exception thrown into the mix, for
+when the head subform is a symbol that we want to treat as a
+special keyword.  A keyword is a symbol that has a Lisp Indent
+Number, or LIN, associated with it. The section on customization
+tells you how to set LINs. Let us call a keyword an ``N``-keyword
+if it has a LIN of `N`.
+
+5: If a form whose head is an ``N``-keyword is split across
+lines, and if its ``i``'th subform starts a line, then that
+subform's indentation depends on the value of `i` relative to
+`N`.
+
+5a: If `i \<= N`, then the ``i``'th subform is indented 3 columns
+past the beginning of the head keyword.
+
+5b: If `i > N`, then the ``i``'th subform is indented just one
+column past the beginning of the head keyword.
+
+Examples:
+
+  (keyword-3 arg1
+      arg2
+      arg3
+    arg4
+    \...)
+
+  (keyword-3 arg1 arg2 arg3
+    arg4
+    \...)
 
 == Customization
 
 Neoscmindent uses keyword info from `~/.lispwords.lua`. Here is
-an example `~/.lispwords.lua`: It's simply a Lua file that
+an example `.lispwords.lua`: It's simply a Lua file that
 returns a Lua table associating keywords with their proposed
-indentation styles:
+LINs:
 
   return {
     ['call-with-input-file'] = 1,
@@ -99,42 +188,23 @@ indentation styles:
     ['when'] = 1,
   }
 
-As you can see, each keyword is assigned a number, which we call
-its "Lisp indent number", or LIN for short. Let's say a keyword
-`quayword` has a LIN `n`. A form `(quayword S1 S2 \...)` can occur
-either on a line by itself or it can be split across lines.
+Neoscmindent also checks for option `'lispwords'` (aka `'lw'`)
+for the LIN of a keyword that it can't find in
+`.lispwords.lua`. Such keywords are assumed to have LIN `0`.
+(Please note that Neoscmindent can only peer at the global, not
+local, version of `'lispwords'`.)
 
-If the form is on a line by itself, the
-subforms need no indentation.
-
-If it splits such that `Si` is on
-the second line, then the indentation of `Si` depends on whether
-`i` is greater than `n`.
-
-If `i \<= n`, then `Si` is indented 3 columns past (the beginning
-of) `quayword`.
-
-If `i > n`, then `Si` is indented just one column past (the
-beginning of) `quayword`.
-
-The same holds true if the form is split across more than two
-lines.
-
-=== Keywords not mentioned in `~/.lispwords.lua`
-
-If a keyword is present in the option `'lispwords'` (aka `'lw'`),
-then absent an entry in `~/.lispwords.lua` it will be assumed to
-have a LIN of 0.
-
-Any keyword that starts with `def` is
-assumed to have LIN 0, unless overridden in `~/.lispwords.lua`.
+If a keyword is neither in `'.lispwords'` nor in `'lispwords'`,
+but starts with `def`, its LIN is taken to be `0`.
 (This is because Lispers tend to create ad hoc definer keywords,
 whether procedure or macro, whose names start with `def`, and
-which they expect to indent like `define` or `defun`.)
+which they expect to not indent their subforms
+excessively, as rule 1 would require.)
 
-If a keyword is neither in `.lispwords.lua` nor in `'lispwords'`,
-then it is assumed to have a LIN of `-1`. In this case, if the
-first subform is on the second line, then it and any subsequent
-lines are aligned directly under the keyword. If the first
-subform stays on the same line as the keyword, then any
-subsequent lines are aligned directly under the first subform.
+All other keywords have LIN `-1`. These keywords follow the rules
+1 and 2 above. You shouldn't need to explicitly set a LIN of `-1`, unless
+the keyword is already in `'lw'` (hence LIN 0), and you
+need to force it to behave like an ordinary symbol.
+
+If you ever want a keyword to behave like a literal (rule 4), then set
+its LIN to `-2`.
