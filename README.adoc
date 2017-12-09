@@ -8,51 +8,88 @@ there). It doesn't require any external programs.
 
 This package contains the files
 
-  autoload/scmindent.vim
-  lua/scmindent.lua
+  autoload/neoscmindent.vim
+  lua/neoscmindent.lua
+  after/indent/lisp.vim
 
-Copy them to the `autoload` and `lua` subdirectories respectively,
-somewhere in your Neovim `'runtimepath'` (typically,
-`~/.config/nvim/autoload` and `~/config/nvim/lua`).
+Copy them to the `autoload`, `lua`, and `after/indent` subdirectories respectively,
+somewhere in your Neovim `'runtimepath'` (aka `'rtp'`). Unless
+you're doing something atypical, your `'rtp'` includes
+the directory `~/.config/nvim`, so you could do:
 
-Alternatively: create a directory `neo-scmindent/start` in the
-`pack` subdirectory somewhere in your `'runtimepath'` (typically,
-`~/.config/nvim/pack`). Clone this repo into that directory
-(typically `~/.config/nvim/pack/neo-scmindent/start`). 
+   # ensure that the relevant subdirectories in your rtp exist
+   mkdir -p ~/.config/nvim/autoload
+   mkdir -p ~/.config/nvim/lua
+   mkdir -p ~/.config/nvim/after/indent
 
-See `:help packages` for info on how to clone Vim packages from
-GitHub into your Neovim runtimepath. It's not difficult, and you
-don't really need a 3rd-party plugin manager (which I expect
-would work too, although I've never tried.)
+   # go to the directory created by this repo
+   cd <this-repo-directory>
 
-To have a Scheme/Lisp file use this indenter, set its local
-option `'indentexpr'` (aka `'inde'`) as follows:
+   # copy the files from the repo to the appropriate places in rtp
+   cp -p autoload/neoscmindent.vim ~/.config/nvim/autoload
+   cp -p lua/neoscmindent.lua ~/.config/nvim/lua
+   cp -p after/indent/lisp.vim ~/.config/nvim/after/indent
 
-  setl inde=scmindent#GetScmIndent(v:lnum)
+Alternatively, clone this repo inside the `pack` subdirectory
+somewhere in your `'rtp'`, using the path suggested in `:help
+packages`. E.g., again assuming
+`~/.config/nvim` is in your `'rtp'`, you could do
 
-For convenience, this can be done either through an indent file
-for the desired filetype, or through an explicit autocommand,
-e.g., one of:
+  # ensure that the relevant pack subdirectory exists
+  mkdir -p ~/.config/nvim/pack/neoscmindent/start
 
-  au filetype scheme setl inde=scmindent#GetScmIndent(v:lnum)
+  # go there
+  cd ~/.config/nvim/pack/neoscmindent/start
 
-  au bufread,bufnewfile *.scm setl inde=scmindent#GetScmIndent(v:lnum)
+  # clone this repo there
+  git clone https://github.com/ds26gte/neoscmindent
 
-Note that the option `'lisp'` overrides `'inde'`. We don't want
-this, because `'lisp'` is less featurful and occasionally buggy.
-So, ensure option `'lisp'` is _not_ set.
+Either approoach is not difficult, you don't really need a
+3rd-party plugin manager, but I expect that would work too, not
+that I've tried.
+
+The `after/indent/lisp.vim` is just for convenience. You may want
+to trigger the indenter in your own way, especially if you
+already have a familiar setup for your Scheme and Lisp (or other
+Lisp-y) files. Whatever you do, you have to make sure that the
+local option `'indentexpr'` (aka `'inde'`) is set for the files
+that you want indented by Neoscmindent, i.e.,
+
+  setl inde=neoscmindent#GetScmIndent(v:lnum)
+
+You also need to ensure that the options `'lisp'` and
+`'equalprg'` (aka `'ep'`) are _not_ set, so `'inde'` can come
+into its own.
+
+(`'lisp'` is Vim's own attempt at indenting Lisp. It's less
+featureful than Neoscmindent, and also occasionally buggy.)
+
+(`'equalprg'` is used to call an external-program indenter, e.g.,
+the kinds provided in Neoscmindent's parent software,
+https://github.com/ds26gte/scmindent. If you're using Neovim,
+then Neoscmindent is the better choice as it runs natively in
+Neovim without requiring an external program in a language that
+you may not have installed. If you're using Vim, well, Scmindent
+is your only choice.)
+
+(If you're wondering why the repo doesn't provide an
+`after/indent/scheme.vim` provided, this is because Vim's
+`indent/scheme.vim` takes care of loading any and all
+`indent/lisp.vim` filess that are present.)
 
 == Customization
 
-The indenter uses keyword info from `~/.lispwords.lua`. Here is
-an example `~/.lispwords.lua`, a Lua file that returns a table associating
-keywords with their proposed LINs:
+Neoscmindent uses keyword info from `~/.lispwords.lua`. Here is
+an example `~/.lispwords.lua`: It's simply a Lua file that
+returns a Lua table associating keywords with their proposed
+indentation styles:
 
   return {
     ['call-with-input-file'] = 1,
     ['case'] = 1,
     ['do'] = 2,
     ['do*'] = 2,
+    ['fluid-let'] = 1,
     ['lambda'] = 1,
     ['let'] = 1,
     ['let*'] = 1,
@@ -63,33 +100,41 @@ keywords with their proposed LINs:
   }
 
 As you can see, each keyword is assigned a number, which we call
-its "Lisp indent number" or LIN. Let's say a keyword `K` has a LIN
-`n`. A form `(K S1 S2 ...)` can occur either on a line by itself or
-it can be split across lines. 
+its "Lisp indent number", or LIN for short. Let's say a keyword
+`quayword` has a LIN `n`. A form `(quayword S1 S2 \...)` can occur
+either on a line by itself or it can be split across lines.
 
 If the form is on a line by itself, the
-subforms need no indentation. 
+subforms need no indentation.
 
 If it splits such that `Si` is on
 the second line, then the indentation of `Si` depends on whether
-`i` is greater than `n`.  
+`i` is greater than `n`.
 
-If `i \<= n`, then `Si` is indented 3 columns past `K`.
+If `i \<= n`, then `Si` is indented 3 columns past (the beginning
+of) `quayword`.
 
-If `i > n`, then `Si` is indented just one column past `K`.
+If `i > n`, then `Si` is indented just one column past (the
+beginning of) `quayword`.
 
 The same holds true if the form is split across more than two
 lines.
 
-If a keyword is present in the option `'lispwords'` (aka
-`'lw'`), then absent an entry in `.lispwords.lua` it will be
-assumed to have a LIN of 0. Also, any keyword that starts with
-`def` is assumed to have LIN 0, unless overridden in
-`.lispwords.lua`.
+=== Keywords not mentioned in `~/.lispwords.lua`
+
+If a keyword is present in the option `'lispwords'` (aka `'lw'`),
+then absent an entry in `~/.lispwords.lua` it will be assumed to
+have a LIN of 0.
+
+Any keyword that starts with `def` is
+assumed to have LIN 0, unless overridden in `~/.lispwords.lua`.
+(This is because Lispers tend to create ad hoc definer keywords,
+whether procedure or macro, whose names start with `def`, and
+which they expect to indent like `define` or `defun`.)
 
 If a keyword is neither in `.lispwords.lua` nor in `'lispwords'`,
-it is assumed to have a LIN of `-1`. In that case, if the first
-subform is on the second line, then it and any subsequent lines
-are aligned directly under the keyword. If the first subform
-stays on the same line as the keyword, then any subsequent lines
-are aligned directly under the first subform.
+then it is assumed to have a LIN of `-1`. In this case, if the
+first subform is on the second line, then it and any subsequent
+lines are aligned directly under the keyword. If the first
+subform stays on the same line as the keyword, then any
+subsequent lines are aligned directly under the first subform.

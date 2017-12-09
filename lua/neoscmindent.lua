@@ -1,7 +1,5 @@
-#! /usr/bin/env lua
-
+-- Last modified 2017-12-09
 -- Dorai Sitaram
--- last modified 2017-12-09
 
 -- this script takes lines of Lisp or Scheme code from its
 -- stdin and produces an indented version thereof on its
@@ -217,9 +215,9 @@ function do_indent(curr_buf, pnum, lnum)
   end
 end
 
-local scmindent = {}
+local neoscmindent = {}
 
-scmindent.GetScmIndent = function(lnum1)
+neoscmindent.GetScmIndent = function(lnum1)
   local lnum = lnum1 - 1 -- convert to 0-based line number
   local curr_buf = vim.api.nvim_get_current_buf()
   --
@@ -251,4 +249,4 @@ scmindent.GetScmIndent = function(lnum1)
   return do_indent(curr_buf, pnum, lnum)
 end
 
-return scmindent
+return neoscmindent
