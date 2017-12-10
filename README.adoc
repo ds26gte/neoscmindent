@@ -83,7 +83,7 @@ call these code constituents _forms_. A form, if it is a
 non-empty list, has a head subform and zero or more argument
 subforms. Thus:
 
-  (head-subform arg-subform-1 arg-subform-2 \...)
+  (head-subform arg-subform-1 arg-subform-2 ...)
 
 Indenting Lisp code adds or removes spaces before each line so
 that the code has a quickly readable structure. Indenting does
@@ -98,7 +98,7 @@ E.g.,
 
   (some-function-1 arg1
                    arg2
-                   \...)
+                   ...)
 
 2: If the head subform is an atom and is on a line by itself,
 then its subsequent lines are indented one column past the
@@ -107,17 +107,17 @@ beginning of the head atom. E.g.,
   (some-function-2
     arg1
     arg2
-    \...)
+    ...)
 
 3: If the head subform is a list, then its subsequent lines are
 indented to line up under the head subform. It does not matter
 whether there are argument subforms on the same line as the head
 form or not. E.g.,
 
-  ((some-function-3 s-arg1 \...)
+  ((some-function-3 s-arg1 ...)
    arg1
    arg2
-   \...)
+   ...)
 
 4: If the head form is a literal (a non-symbolic atom, such as
 a number), then its subsequent lines are indented to line up
@@ -160,11 +160,11 @@ Examples:
       arg2
       arg3
     arg4
-    \...)
+    ...)
 
   (keyword-3 arg1 arg2 arg3
     arg4
-    \...)
+    ...)
 
 == Customization
 
