@@ -140,18 +140,18 @@ indentation. So there is one exception thrown into the mix, for
 when the head subform is a symbol that we want to treat as a
 special keyword.  A keyword is a symbol that has a Lisp Indent
 Number, or LIN, associated with it. The section on customization
-tells you how to set LINs. Let us call a keyword an ``N``-keyword
-if it has a LIN of `N`.
+tells you how to set LINs. Let us call a keyword an N-keyword
+if it has a LIN of N.
 
-5: If a form whose head is an ``N``-keyword is split across
-lines, and if its ``i``'th subform starts a line, then that
-subform's indentation depends on the value of `i` relative to
-`N`.
+5: If a form whose head is an N-keyword is split across
+lines, and if its i'th subform starts a line, then that
+subform's indentation depends on the value of i relative to
+N.
 
-5a: If `i \<= N`, then the ``i``'th subform is indented 3 columns
+5a: If i ≤ N, then the i'th subform is indented 3 columns
 past the beginning of the head keyword.
 
-5b: If `i > N`, then the ``i``'th subform is indented just one
+5b: If i > N, then the i'th subform is indented just one
 column past the beginning of the head keyword.
 
 Examples:
@@ -190,21 +190,21 @@ LINs:
 
 Neoscmindent also checks for option `'lispwords'` (aka `'lw'`)
 for the LIN of a keyword that it can't find in
-`.lispwords.lua`. Such keywords are assumed to have LIN `0`.
+`.lispwords.lua`. Such keywords are assumed to have LIN 0.
 (Please note that Neoscmindent can only peer at the global, not
 local, version of `'lispwords'`.)
 
 If a keyword is neither in `'.lispwords'` nor in `'lispwords'`,
-but starts with `def`, its LIN is taken to be `0`.
+but starts with `def`, its LIN is taken to be 0.
 (This is because Lispers tend to create ad hoc definer keywords,
 whether procedure or macro, whose names start with `def`, and
 which they expect to not indent their subforms
 excessively, as rule 1 would require.)
 
-All other keywords have LIN `-1`. These keywords follow the rules
-1 and 2 above. You shouldn't need to explicitly set a LIN of `-1`, unless
-the keyword is already in `'lw'` (hence LIN 0), and you
+All other keywords have LIN −1. These keywords follow the rules
+1 and 2 above. You shouldn't need to explicitly set a LIN of −1, unless
+the keyword is already in `'lispwords'` (hence LIN 0), and you
 need to force it to behave like an ordinary symbol.
 
 If you ever want a keyword to behave like a literal (rule 4), then set
-its LIN to `-2`.
+its LIN to −2.

@@ -67,24 +67,16 @@ function get_lisp_indent_number(s)
   end
 end
 
-
-function past_next_token(s, i, n)
-  -- gives the index in s that's just past the token starting at s[i].
-  -- Result can't be more than n+1
+function past_next_atom(s, i, n)
+  -- gives the index in s that's just past the atom starting at s[i].
+  -- Result can't be more than n+1.
+  -- If no atom found, result is i itself.
   while true do
     if i > n then return n+1 end
     local c = string.sub(s, i, i)
     if c == '\\' then
       i = i+2
-    elseif c == '#' then
-      if i == n then return n+1 end
-      i = i+1
-      c = string.sub(s, i, i)
-      if c == '\\' then
-        i = i+2
-      end
     elseif string.find(c, '[][ \t()\'"`,;]') then
-      -- what if i = orig i? Then we went past an empty token
       return i
     else
       i = i+1
@@ -93,8 +85,8 @@ function past_next_token(s, i, n)
 end
 
 function calc_subindent(s, i, n)
-  -- we're looking for a keyword directly after an lparen
-  local j = past_next_token(s, i, n)
+  -- we're looking for a keyword directly after an lparen in s[i-1]
+  local j = past_next_atom(s, i, n)
   -- j would be just after that keyword
   -- it's possible no keyword found, in which case j == i
   local delta_indent = 0
@@ -108,9 +100,7 @@ function calc_subindent(s, i, n)
       local i2 = i-2; c2 = string.sub(s, i2, i2)
       -- c2 is the char before the lparen
     end
-    if c2 == "'" or c2 == '`' then
-      do end
-    elseif is_literal_token(w) then
+    if c2 == "'" or c2 == '`' or is_literal_token(w) then
       do end
     else
       lisp_indent_num = get_lisp_indent_number(w)
@@ -194,13 +184,13 @@ function do_indent(curr_buf, pnum, lnum)
     --
     local n = #curr_line
     local is_escape = false
-    local is_inter_word_space = false
+    local is_token_interstice = false
     local function incr_finished_subforms()
-      if not is_inter_word_space then
+      if not is_token_interstice then
         if #paren_stack > 0 then
           paren_stack[1].num_finished_subforms = paren_stack[1].num_finished_subforms + 1
         end
-        is_inter_word_space = true
+        is_token_interstice = true
       end
     end
     local i = 1
@@ -209,7 +199,7 @@ function do_indent(curr_buf, pnum, lnum)
       if is_escape then
         is_escape = false; i = i+1
       elseif c == '\\' then
-        is_inter_word_space = false
+        is_token_interstice = false
         is_escape = true; i = i+1
       elseif is_inside_string then
         if c == '"' then
@@ -234,22 +224,26 @@ function do_indent(curr_buf, pnum, lnum)
           lisp_indent_num = lisp_indent_num,
           num_finished_subforms = -1
         })
-        is_inter_word_space = true
+        is_token_interstice = true
         i = i+1
+        if j > i then
+          i = j
+          is_token_interstice = false
+        end
       elseif string.find(c, '[])]') then
         if #paren_stack > 0 then
           table.remove(paren_stack, 1)
-          is_inter_word_space = false
+          is_token_interstice = false
           if #paren_stack == 0 then
             left_i = 0
-            is_inter_word_space = true
+            is_token_interstice = true
           else
             incr_finished_subforms()
           end
         end
         i = i+1
       else
-        is_inter_word_space = false; i = i+1
+        is_token_interstice = false; i = i+1
       end
     end
     incr_finished_subforms()
