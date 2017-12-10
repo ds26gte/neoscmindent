@@ -1,12 +1,18 @@
--- Last modified 2017-12-10
--- Dorai Sitaram
+#! /usr/bin/env lua
 
--- if standalone is false, this file defines a GetScmIndent() that can be used
+-- Dorai Sitaram
+-- Last modified 2017-12-10
+
+-- Find if this file is being run within Neovim Lua.
+
+local running_in_neovim = (vim and type(vim) == 'table' and
+                           vim.api and type(vim.api) == 'table' and
+                           vim.api.nvim_eval and type(vim.api.nvim_eval) == 'function')
+
+-- If running_in_neovim, this file defines a GetScmIndent() that can be used
 -- for 'indentexpr' to automatically indent Scheme/Lisp code in a Neovim
 -- buffer. If not, it is a script that takes lines of Lisp or Scheme code from
 -- its stdin and produces an indented version thereof on its stdout.
-
-local standalone = false
 
 function file_exists(f)
   local h = io.open(f)
@@ -39,7 +45,7 @@ function split_string(s, c)
   return r
 end
 
-if not standalone then
+if running_in_neovim then
   do
     local vimlw = split_string(vim.api.nvim_get_option('lw'), ',')
     for _,w in ipairs(vimlw) do
@@ -143,13 +149,14 @@ function do_indent(curr_buf, pnum, lnum)
   local paren_stack = {}
   local is_inside_string = false
   local cnum = pnum
-  while standalone or (cnum <= lnum) do
+  while true do
     local curr_line
-    if standalone then
+    if running_in_neovim then
+      if cnum > lnum then break end
+      curr_line = vim.api.nvim_buf_get_lines(curr_buf, cnum, cnum+1, 1)[1]
+    else
       curr_line = io.read()
       if not curr_line then break end
-    else
-      curr_line = vim.api.nvim_buf_get_lines(curr_buf, cnum, cnum+1, 1)[1]
     end
     local leading_spaces = num_leading_spaces(curr_line)
     local curr_left_i
@@ -172,13 +179,11 @@ function do_indent(curr_buf, pnum, lnum)
         curr_left_i = curr_left_i + 2
       end
     end
-    if not standalone then
-      if cnum == lnum then
-        return curr_left_i
-      end
+    if running_in_neovim and cnum == lnum then
+      return curr_left_i
     end
     curr_line = string_trim_blanks(curr_line)
-    if standalone then
+    if not running_in_neovim then
       io.write(string.rep(' ', curr_left_i), curr_line, '\n')
     end
     --
@@ -253,7 +258,7 @@ end
 
 local neoscmindent = {}
 
-if not standalone then
+if running_in_neovim then
   neoscmindent.GetScmIndent = function(lnum1)
     local lnum = lnum1 - 1 -- convert to 0-based line number
     local curr_buf = vim.api.nvim_get_current_buf()
@@ -287,7 +292,7 @@ if not standalone then
   end
 end
 
-if not standalone then
+if running_in_neovim then
   return neoscmindent
 else
   do_indent(false, 1, 1)

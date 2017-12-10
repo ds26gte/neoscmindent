@@ -56,25 +56,47 @@ that you want indented by Neoscmindent, i.e.,
 
   setl inde=neoscmindent#GetScmIndent(v:lnum)
 
-You also need to ensure that the options `'lisp'` and
-`'equalprg'` (aka `'ep'`) are _not_ set, so `'inde'` can come
-into its own.
-
-(`'lisp'` is Vim's own attempt at indenting Lisp. It's less
-featureful than Neoscmindent, and also occasionally buggy.)
-
-(`'equalprg'` is used to call an external-program indenter, e.g.,
-the kinds provided in Neoscmindent's parent software,
-https://github.com/ds26gte/scmindent. If you're using Neovim,
-then Neoscmindent is the better choice as it runs natively in
-Neovim without requiring an external program in a language that
-you may not have installed. If you're using Vim, well, Scmindent
-is your only choice.)
-
 (If you're wondering why the repo doesn't provide an
 `after/indent/scheme.vim`, this is because Vim's
-`indent/scheme.vim` takes care of loading any and all
+`indent/scheme.vim` takes care to load any and all
 `indent/lisp.vim` filess that are present.)
+
+You also need to ensure that the options `'lisp'` and
+`'equalprg'` (aka `'ep'`) are _not_ set, so that `'inde'` has a
+chance to do its thing.
+
+=== A note about `'lisp'` and `'equalprg'`
+
+`'lisp'` is Vim's own built-in attempt at indenting Lisp. It's
+less featureful than Neoscmindent, and also occasionally buggy.
+Try correcting the indent on the following with `'lisp'` on,
+after unsetting `'inde'` and `'equalprg'`:
+
+  (begin
+    (display "alpha
+               bravo should stay put
+                 charlie should stay put")
+         "should line up under lparen before display")
+
+Also `'lisp'` has no concept of indenting different subforms of 
+the same form differently.
+
+`'equalprg'` is used to call an external-program indenter, e.g.,
+the kinds provided in Neoscmindent's parent software,
+https://github.com/ds26gte/scmindent.
+
+If you're using Vim -- i.e., not Neovim -- then you can still use
+Neoscmindent, but not as your `'indentexpr'`. Instead set
+`'equalprg'` as follows:
+
+  setl equalprg=neoscmindent.lua
+
+after ensuring `neoscmindent.lua` is somewhere in your `$PATH`.
+This requires that you have Lua on your system. The experience
+will be clunkier than using `'indentexpr'`, because the
+autoindentation won't be Lispy: you will have to call `=`
+explicitly every so often in order to correct the indentation.
+But it will DTRT.
 
 == Indentation strategy
 
