@@ -1,6 +1,6 @@
-= Neoscmindent -- indent Scheme and Lisp files in Neovim
+= Editing Lisp and Scheme files in Neovim
 
-This is a Neovim native-Lua implementation of an indenting
+Neoscmindent is a Neovim native-Lua implementation of an indenting
 function for Scheme, Lisp, and similar languages.
 
 == Installation
@@ -16,18 +16,18 @@ somewhere in your Neovim `'runtimepath'` (aka `'rtp'`). Unless
 you're doing something atypical, your `'rtp'` includes
 the directory `~/.config/nvim`, so you could do:
 
-   # ensure that the relevant subdirectories in your rtp exist
-   mkdir -p ~/.config/nvim/autoload
-   mkdir -p ~/.config/nvim/lua
-   mkdir -p ~/.config/nvim/after/indent
+  # ensure that the relevant subdirectories in your rtp exist
+  mkdir -p ~/.config/nvim/autoload
+  mkdir -p ~/.config/nvim/lua
+  mkdir -p ~/.config/nvim/after/indent
 
-   # go to the directory created by this repo
-   cd <this-repo-directory>
+  # go to the directory created by this repo
+  cd <this-repo-directory>
 
-   # copy the files from the repo to the appropriate places in rtp
-   cp -p autoload/neoscmindent.vim ~/.config/nvim/autoload
-   cp -p lua/neoscmindent.lua ~/.config/nvim/lua
-   cp -p after/indent/lisp.vim ~/.config/nvim/after/indent
+  # copy the files from the repo to the appropriate places in rtp
+  cp -p autoload/neoscmindent.vim ~/.config/nvim/autoload
+  cp -p lua/neoscmindent.lua ~/.config/nvim/lua
+  cp -p after/indent/lisp.vim ~/.config/nvim/after/indent
 
 Alternatively, clone this repo inside the `pack` subdirectory
 somewhere in your `'rtp'`, using the path suggested in `:help
@@ -78,7 +78,7 @@ after unsetting `'inde'` and `'equalprg'`:
                  charlie should stay put")
          "should line up under lparen before display")
 
-Also `'lisp'` has no concept of indenting different subforms of 
+Also `'lisp'` has no concept of indenting different subforms of
 the same form differently.
 
 `'equalprg'` is used to call an external-program indenter, e.g.,
@@ -230,3 +230,91 @@ need to force it to behave like an ordinary symbol.
 
 If you ever want a keyword to behave like a literal (rule 4), then set
 its LIN to −2.
+
+== A note on `if`
+
+The keyword `if` is in `'lispwords'`, so by default it has LIN 0.
+`if` typically has 2 or 3 subforms. (In Common Lisp and some older
+Schemes it has 2 to 3; in modern Schemes exactly 3.)
+Its first subform -- the test subform
+-- is almost always on the same line as the `if`. And since the
+LIN is 0, every subform under it is aligned 1 column to the right
+of the `if`, like so:
+
+  (if test
+    then
+    else)
+
+Some people like it. Many don't: Here are three alternative LINs
+for `if`:
+
+1: Set LIN to −1.
+
+  (if test
+      then
+      else)
+
+Since −1 is the default LIN, it might appear all you need to do
+is to remove `if` from `'lispwords'`. This would work, but you'd
+have to remove it from the _global_ `'lispwords'`: Neoscmindent
+can't read local modifications to `'lispwords'`. If this is too
+much hassle, just set the LIN in `~/.lispwords.lua`.
+
+2: Set LIN to 2.
+
+  (if test
+      then
+    else)
+
+This has the advantage of distinguishing the then- and else-
+clauses.
+
+3: Set LIN to 3. This indents both the
+then- and else-clause to be 3 columns to the right of `if`. It
+so happens `if` and its post-token space take up 3 columns,
+so you get the same result as LIN −1. Well, almost.
+
+In the rare case you break
+the line before the then-clause, LIN −1 gives you
+
+  (if
+    test
+    then
+    else)
+
+whereas, with LIN 3:
+
+  (if
+      test
+      then
+      else)
+
+Which seems better? Another difference shows up if you have more than one
+else-clause (this is allowed in Emacs Lisp).  With LIN −1:
+
+  (if test
+      then
+      else1
+      else2
+      ...)
+
+With LIN 3:
+
+  (if test
+      then
+      else1
+    else2
+    ...)
+
+which seems objectively bad. LIN 2 would have:
+
+  (if test
+      then
+    else1
+    else2
+    ...)
+
+which seems better because it keeps the else-subforms together
+but distinct from the (single) then-form. In sum, go with LIN −1
+if you want the then- and else-forms aligned; or with 2 if you
+want them distinguished.
