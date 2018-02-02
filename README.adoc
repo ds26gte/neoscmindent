@@ -11,10 +11,11 @@ This package contains the files
   lua/neoscmindent.lua
   after/indent/lisp.vim
 
-Copy them to the `autoload`, `lua`, and `after/indent` subdirectories respectively,
-somewhere in your Neovim `'runtimepath'` (aka `'rtp'`). Unless
-you're doing something atypical, your `'rtp'` includes
-the directory `~/.config/nvim`, so you could do:
+Copy them to the `autoload`, `lua`, and `after/indent`
+subdirectories respectively, somewhere in your Neovim
+`'runtimepath'` (aka `'rtp'`). Unless you're doing something
+atypical, your `'rtp'`/`'pp'` includes the directory
+`~/.config/nvim`, so you could do:
 
   # ensure that the relevant subdirectories in your rtp exist
   mkdir -p ~/.config/nvim/autoload
@@ -30,15 +31,15 @@ the directory `~/.config/nvim`, so you could do:
   cp -p after/indent/lisp.vim ~/.config/nvim/after/indent
 
 Alternatively, clone this repo inside the `pack` subdirectory
-somewhere in your `'rtp'`, using the path suggested in `:help
-packages`. E.g., again assuming
-`~/.config/nvim` is in your `'rtp'`, you could do
+somewhere in your `'rtp'` or `'packpath'` (aka `'pp'`; see `:help
+packages`). E.g., again assuming `~/.config/nvim` is in your
+`'rtp'`, you could do
 
-  # ensure that the relevant pack subdirectory exists
-  mkdir -p ~/.config/nvim/pack/neoscmindent/start
+  # ensure a relevant subdirectory exists to receive neoscminent
+  mkdir -p ~/.config/nvim/pack/3rdpartyplugins/start
 
   # go there
-  cd ~/.config/nvim/pack/neoscmindent/start
+  cd ~/.config/nvim/pack/3rdpartyplugins/start
 
   # clone this repo there
   git clone https://github.com/ds26gte/neoscmindent
