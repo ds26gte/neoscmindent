@@ -1,4 +1,4 @@
-" Last modified 2017-12-09
+" Last modified 2018-06-29
 " Dorai Sitaram
 
 " This after/indent file is offered for convenience. In a typical
@@ -7,10 +7,12 @@
 " use the neoscmindent indenter. (Vim's indent/scheme.vim
 " automatically loads all indent/lisp.vim files it finds, so
 " there is no need for an after/indent/scheme.vim.)
-" 
+"
 " You may prefer to set 'inde', etc. for your preferred filetypes
 " in your own way.
 
-setl ep=
-setl inde=neoscmindent#GetScmIndent(v:lnum)
-setl nolisp 
+if has('nvim')
+  setl ep=
+  setl inde=neoscmindent#GetScmIndent(v:lnum)
+  setl nolisp
+endif
