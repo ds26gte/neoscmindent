@@ -60,7 +60,7 @@ that you want indented by Neoscmindent, i.e.,
 (If you're wondering why the repo doesn't provide an
 `after/indent/scheme.vim`, this is because Vim's
 `indent/scheme.vim` takes care to load any and all
-`indent/lisp.vim` filess that are present.)
+`indent/lisp.vim` files that are present.)
 
 You also need to ensure that the options `'lisp'` and
 `'equalprg'` (aka `'ep'`) are _not_ set, so that `'inde'` has a
@@ -212,10 +212,8 @@ LINs:
   }
 
 Neoscmindent also checks for option `'lispwords'` (aka `'lw'`)
-for the LIN of a keyword that it can't find in
-`.lispwords.lua`. Such keywords are assumed to have LIN 0.
-(Please note that Neoscmindent can only peer at the global, not
-local, version of `'lispwords'`.)
+for the LIN of a keyword that it can't find in `.lispwords.lua`.
+Such keywords are assumed to have LIN 0.
 
 If a keyword is neither in `'.lispwords'` nor in `'lispwords'`,
 but starts with `def`, its LIN is taken to be 0.
@@ -319,3 +317,5 @@ which seems better because it keeps the else-subforms together
 but distinct from the (single) then-form. In sum, go with LIN −1
 if you want the then- and else-forms aligned; or with 2 if you
 want them distinguished.
+
+// Last modified 2018-07-24

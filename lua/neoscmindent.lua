@@ -1,7 +1,7 @@
 #! /usr/bin/env lua
 
 -- Dorai Sitaram
--- Last modified 2017-12-10
+-- Last modified 2018-08-17
 
 -- Find if this file is being run within Neovim Lua.
 
@@ -45,9 +45,20 @@ function split_string(s, c)
   return r
 end
 
-if running_in_neovim then
+function get_lw_option()
+  local function get_local_lw_option ()
+    return vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), 'lw')
+  end
+  local succeeded, lw = pcall(get_local_lw_option)
+  if not succeeded then
+    lw = vim.api.nvim_get_option('lw')
+  end
+  return lw
+end
+
+function slurp_in_lw()
   do
-    local vimlw = split_string(vim.api.nvim_get_option('lw'), ',')
+    local vimlw = split_string(get_lw_option(), ',')
     for _,w in ipairs(vimlw) do
       if not lispwords[w] then
         lispwords[w] = 0
@@ -260,6 +271,7 @@ local neoscmindent = {}
 
 if running_in_neovim then
   neoscmindent.GetScmIndent = function(lnum1)
+    slurp_in_lw()
     local lnum = lnum1 - 1 -- convert to 0-based line number
     local curr_buf = vim.api.nvim_get_current_buf()
     --
