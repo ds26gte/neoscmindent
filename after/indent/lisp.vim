@@ -1,4 +1,4 @@
-" Last modified 2018-06-29
+" Last modified 2018-09-12
 " Dorai Sitaram
 
 " This after/indent file is offered for convenience. In a typical
@@ -14,5 +14,6 @@
 if has('nvim')
   setl ep=
   setl inde=neoscmindent#GetScmIndent(v:lnum)
+  setl lw-=if
   setl nolisp
 endif

@@ -57,12 +57,10 @@ function get_lw_option()
 end
 
 function slurp_in_lw()
-  do
-    local vimlw = split_string(get_lw_option(), ',')
-    for _,w in ipairs(vimlw) do
-      if not lispwords[w] then
-        lispwords[w] = 0
-      end
+  local vimlw = split_string(get_lw_option(), ',')
+  for _,w in ipairs(vimlw) do
+    if not lispwords[w] then
+      lispwords[w] = 0
     end
   end
 end

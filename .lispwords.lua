@@ -1,7 +1,7 @@
 --[[
 .lispwords.lua
 Dorai Sitaram
-Last modified: 2018-08-17
+Last modified: 2018-09-12
 
 Associates an indent number with a Lisp keyword. If keyword A's indent number
 is N, and a Lisp form introduced by A is split across lines, then if the Ith
@@ -12,5 +12,4 @@ N, and by 1 column past A otherwise. This file should be placed in $HOME.
 return {
   ['do'] = 2,
   ['do*'] = 2,
-  ['if'] = 2,
 }
