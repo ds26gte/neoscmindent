@@ -5,99 +5,19 @@ function for Scheme, Lisp, and similar languages.
 
 == Installation
 
-This package contains the files
+If you just want the indenter installed with minimum fuss,
+use the enclosed script `install.sh`.
 
-  autoload/neoscmindent.vim
-  lua/neoscmindent.lua
-  after/indent/lisp.vim
+First,
+`git clone` this repository. This will create a local directory
+called `neoscmindent`. `cd` to it, and type
 
-Copy them to the `autoload`, `lua`, and `after/indent`
-subdirectories respectively, somewhere in your Neovim
-`'runtimepath'` (aka `'rtp'`). Unless you're doing something
-atypical, your `'rtp'`/`'pp'` includes the directory
-`~/.config/nvim`, so you could do:
+   ./install.sh
 
-  # ensure that the relevant subdirectories in your rtp exist
-  mkdir -p ~/.config/nvim/autoload
-  mkdir -p ~/.config/nvim/lua
-  mkdir -p ~/.config/nvim/after/indent
+That's it.
 
-  # go to the directory created by this repo
-  cd <this-repo-directory>
-
-  # copy the files from the repo to the appropriate places in rtp
-  cp -p autoload/neoscmindent.vim ~/.config/nvim/autoload
-  cp -p lua/neoscmindent.lua ~/.config/nvim/lua
-  cp -p after/indent/lisp.vim ~/.config/nvim/after/indent
-
-Alternatively, clone this repo inside the `pack` subdirectory
-somewhere in your `'rtp'` or `'packpath'` (aka `'pp'`; see `:help
-packages`). E.g., again assuming `~/.config/nvim` is in your
-`'rtp'`, you could do
-
-  # ensure a relevant subdirectory exists to receive neoscminent
-  mkdir -p ~/.config/nvim/pack/3rdpartyplugins/start
-
-  # go there
-  cd ~/.config/nvim/pack/3rdpartyplugins/start
-
-  # clone this repo there
-  git clone https://github.com/ds26gte/neoscmindent
-
-Either approoach is easy enough, you don't really need a
-3rd-party plugin manager, but I expect that would work too, not
-that I've tried.
-
-The `after/indent/lisp.vim` is just for convenience. You may want
-to trigger the indenter in your own way, especially if you
-already have a familiar setup for your Scheme and Lisp (or other
-Lisp-y) files. Whatever you do, you have to make sure that the
-local option `'indentexpr'` (aka `'inde'`) is set for the files
-that you want indented by Neoscmindent, i.e.,
-
-  setl inde=neoscmindent#GetScmIndent(v:lnum)
-
-(If you're wondering why the repo doesn't provide an
-`after/indent/scheme.vim`, this is because Vim's
-`indent/scheme.vim` takes care to load any and all
-`indent/lisp.vim` files that are present.)
-
-You also need to ensure that the options `'lisp'` and
-`'equalprg'` (aka `'ep'`) are _not_ set, so that `'inde'` has a
-chance to do its thing.
-
-=== A note about `'lisp'` and `'equalprg'`
-
-`'lisp'` is Vim's own built-in attempt at indenting Lisp. It's
-less featureful than Neoscmindent, and also occasionally buggy.
-Try correcting the indent on the following with `'lisp'` on,
-after unsetting `'inde'` and `'equalprg'`:
-
-  (begin
-    (display "alpha
-               bravo should stay put
-                 charlie should stay put")
-         "should line up under lparen before display")
-
-Also `'lisp'` has no concept of indenting different subforms of
-the same form differently.
-
-`'equalprg'` is used to call an external-program indenter, e.g.,
-the kinds provided in Neoscmindent's parent software,
-https://github.com/ds26gte/scmindent.
-
-If you're using Vim -- i.e., not Neovim -- then you can still use
-Neoscmindent, but not as your `'indentexpr'`. Instead set
-`'equalprg'` as follows:
-
-  setl equalprg=neoscmindent.lua
-
-after ensuring `neoscmindent.lua` is somewhere in your `$PATH`.
-This requires that you have Lua on your system. The experience
-will be clunkier than using `'indentexpr'`, because the
-autoindentation won't be Lispy: you will have to call `=`
-explicitly every so often in order to correct the indentation.
-But it will DTRT.
+Go to the section _Alternative installation approaches_ if you
+need to.
 
 == Indentation strategy
 
@@ -215,7 +135,7 @@ Neoscmindent also checks for option `'lispwords'` (aka `'lw'`)
 for the LIN of a keyword that it can't find in `.lispwords.lua`.
 Such keywords are assumed to have LIN 0.
 
-If a keyword is neither in `'.lispwords'` nor in `'lispwords'`,
+If a keyword is neither in `'.lispwords.lua'` nor in `'lispwords'`,
 but starts with `def`, its LIN is taken to be 0.
 (This is because Lispers tend to create ad hoc definer keywords,
 whether procedure or macro, whose names start with `def`, and
@@ -254,7 +174,8 @@ for `if`:
       then
       else)
 
-Since −1 is the default LIN for a keyword not in `'lispwords'`, you could either remove `if` from
+Since −1 is the default LIN for a keyword not in `'lispwords'`,
+you could either remove `if` from
 `'lispwords'` (global or local to your filetype), or set its
 LIN explicitly to −1 in `~/.lispwords.lua`.
 
@@ -320,4 +241,135 @@ but distinct from the (single) then-form. In sum, go with LIN −1
 if you want the then- and else-forms aligned; or with 2 if you
 want them distinguished.
 
-// Last modified 2018-09-12
+== Alternative installation approaches
+
+While the quick-install works for most people, if you already
+have an extensive Lisp editing setup, you may wish to incorporate the
+essentials of Neoscmindent in a more flexible way.
+
+Let's deconstruct the quick install: It puts the `neoscmindent`
+repo under a `pack` subdirectory somewhere in your `'runtimepath'`
+(aka `'rtp'`) or `'packpath'` (aka `'pp'`).  (See `:help
+packages.)
+
+An explicit install lets you pick the
+`'pack'` subdirectory. Assuming `~/.config/nvim` is in your
+`'runtimepath'`, a suitable `'pack'` directory is
+`~/.config/nvim/pack`.
+
+Ensure a relevant subdirectory exists to receive `neoscminent`:
+
+  mkdir -p ~/.config/nvim/pack/3rdpartyplugins/start
+
+Go there and clone this repo:
+
+  cd ~/.config/nvim/pack/3rdpartyplugins/start
+  git clone https://github.com/ds26gte/neoscmindent
+
+(You don't really need a plugin manager for this, but I expect
+that would work too, not that I've tried.)
+
+If you don't want to deal with packages at all, you can individually
+copy just the three essential files from the repo into your Neovim
+config area. The three files are:
+
+  autoload/scmindent.vim
+  lua/scmindent.lua
+  after/indent/lisp.vim
+
+Again, unless you're doing something atypical, your
+`'runtimepath`' includes the directory `~/.config/nvim`. Copy the
+above three files to the `autoload`, `lua`, and `after/indent`
+subdirectories respectively. First, ensure that these directories
+exist:
+
+  mkdir -p ~/.config/nvim/autoload
+  mkdir -p ~/.config/nvim/lua
+  mkdir -p ~/.config/nvim/after/indent
+
+Then, after `cd`ing to the repo directory, copy the three files
+over:
+
+  cp -p autoload/scmindent.vim ~/.config/nvim/autoload
+  cp -p lua/scmindent.lua ~/.config/nvim/lua
+  cp -p after/indent/lisp.vim ~/.config/nvim/after/indent
+
+The `after/indent/lisp.vim` adds to the default indent plugin for
+Scheme and Lisp files some canned stuff that will let
+Neoscmindent do its thing. You may already have such a file, or
+wish to roll your own. In that case, do not copy this file over,
+or if you installed the entire repo under a `'pack'` directory,
+delete this file.
+
+If you want to create or modify your own `after/indent/lisp.vim`, make sure that it
+sets the `'indentexpr'` (aka `'inde'`) option and _unsets_ the `'lisp'` and
+`'equalprg'` (`'ep'`) options:
+
+  setl nolisp
+  setl equalprg=
+  setl indentexpr=scmindent#GetScmIndent(v:lnum)
+
+If you're wondering why you don't need an
+`after/indent/scheme.vim`, this is because Vim's
+`indent/scheme.vim` takes care to load any and all
+`indent/lisp.vim` files that are present. For other Lisp-like
+files with a different filetype, you would add these lines to
+their specific `after/indent` file.
+
+You can avoid an `after` file by explicitly assigning these
+options via a filetype autocommand, either in your `init.vim`
+or in a regular plugin file in your `plugin` directory:
+
+  autocmd filetype scheme,lisp
+     \ setl nolisp ep= inde=scmindent#GetScmIndent(v:lnum)
+
+Again, add other filetypes to the command above as needed.
+
+=== A note on `'lisp'` and `'equalprg'`
+
+`'lisp'` and `'equalprg'` need to be unset because they both
+override `'indentexpr'` (and `'lisp'` overrides `'equalprg'`).
+They allow alternative, less featureful ways to indent Lisp in
+the vi family of editors.
+
+Typically, the options `'lisp'`, `'autoindent'` (aka `'ai'`), and
+`'showmatch'` (`'sm'`) are set together, but except in the improved vi
+clones Vim and Neovim, this approach fails in at least two
+respects:
+
+1. escaped parentheses and double-quotes are not treated
+correctly; and
+
+2. all head-words are treated identically.
+
+Even the redoubtable Vim, which has improved its Lisp editing
+support over the years, and provides the `'lispwords'` option to
+identify keywords,
+continues to fail in
+https://github.com/ds26gte/neoscmindent/blob/master/vim-indent-error.lisp[strange
+ways]. Neovim inherits this legacy.
+
+Fortunately, both vi and Vim let you delegate the responsibility
+for indenting such code to an external filter program of your
+choosing via the `'equalprog'`.  Indeed, you can use the
+`lua/scmindent.lua` file in this repo as one such filter, viz.,
+
+  setl equalprg=scmindent.lua
+
+This assumes you have placed `scmindent.lua` in your `PATH`, and
+that you have Lua on your system. Neoscmindent's parent software,
+https://github.com/ds26gte/scmindent, provides more such filters,
+in different languages.
+
+While this works, the
+experience is clunkier than using `'indentexpr'`, because
+autoindentation will be according the `'autoindent'` option,
+which isn't very Lispy. To get your code correctly indented, you
+have to explicitly type `=` in normal mode every so often. Still,
+if you are OK with this extra effort, it will DTRT. It is also
+the only way of using `scmindent.lua` if you're not using Neovim.
+
+The approach using `'indentexpr'` offers the least friction. It
+does require that you use Neovim, not Vim, let alone any other vi.
+
+// Last modified 2019-11-10

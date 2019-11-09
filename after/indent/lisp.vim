@@ -4,7 +4,7 @@
 " This after/indent file is offered for convenience. In a typical
 " setting, where this repo is unpacked into your nvim config
 " tree, this file will ensure that filetypes 'lisp' and 'scheme'
-" use the neoscmindent indenter. (Vim's indent/scheme.vim
+" use the scmindent indenter. (Vim's indent/scheme.vim
 " automatically loads all indent/lisp.vim files it finds, so
 " there is no need for an after/indent/scheme.vim.)
 "
@@ -13,7 +13,7 @@
 
 if has('nvim')
   setl ep=
-  setl inde=neoscmindent#GetScmIndent(v:lnum)
+  setl inde=scmindent#GetScmIndent(v:lnum)
   setl lw-=if
   setl nolisp
 endif

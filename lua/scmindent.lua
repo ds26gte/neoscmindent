@@ -1,7 +1,7 @@
 #! /usr/bin/env lua
 
 -- Dorai Sitaram
--- Last modified 2018-08-17
+-- Last modified 2019-11-10
 
 -- Find if this file is being run within Neovim Lua.
 
@@ -198,9 +198,9 @@ function do_indent(curr_buf, pnum, lnum)
     --
     local n = #curr_line
     local is_escape = false
-    local is_token_interstice = false
+    local is_token_interstice = true
     local function incr_finished_subforms()
-      if not is_token_interstice then
+      if not is_token_interstice and not is_inside_string then
         if #paren_stack > 0 then
           paren_stack[1].num_finished_subforms = paren_stack[1].num_finished_subforms + 1
         end
@@ -209,7 +209,7 @@ function do_indent(curr_buf, pnum, lnum)
     end
     local i = 1
     while i <= n do
-      local c = string.sub(curr_line, i, i)
+      local c = curr_line:sub(i, i)
       if is_escape then
         is_escape = false; i = i+1
       elseif c == '\\' then
@@ -226,7 +226,9 @@ function do_indent(curr_buf, pnum, lnum)
         break
       elseif c == '"' then
         incr_finished_subforms()
-        is_inside_string = true; i = i+1
+        is_inside_string = true;
+        is_token_interstice = false;
+        i = i+1
       elseif c == ' ' or c == '\t' then
         incr_finished_subforms()
         i = i+1
@@ -261,14 +263,16 @@ function do_indent(curr_buf, pnum, lnum)
       end
     end
     incr_finished_subforms()
-    cnum = cnum+1
+    if running_in_neovim then
+      cnum = cnum+1
+    end
   end
 end
 
-local neoscmindent = {}
+local scmindent = {}
 
 if running_in_neovim then
-  neoscmindent.GetScmIndent = function(lnum1)
+  scmindent.GetScmIndent = function(lnum1)
     slurp_in_lw()
     local lnum = lnum1 - 1 -- convert to 0-based line number
     local curr_buf = vim.api.nvim_get_current_buf()
@@ -282,7 +286,7 @@ if running_in_neovim then
     local currently_blank = false
     while pnum > 0 do
       local pstr = vim.api.nvim_buf_get_lines(curr_buf, pnum, pnum+1, 1)[1]
-      if pstr:match("%s*$") then
+      if pstr:match("^%s*$") then
         if currently_blank then
           do end
         elseif one_blank_seen then
@@ -303,7 +307,7 @@ if running_in_neovim then
 end
 
 if running_in_neovim then
-  return neoscmindent
+  return scmindent
 else
   do_indent(false, 1, 1)
 end
