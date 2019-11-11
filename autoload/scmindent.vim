@@ -1,6 +1,8 @@
-" Last modified 2019-11-09
+" Last modified 2019-11-10
 " Dorai Sitaram
 
+let s:scmindentObj = 'require("scmindent").GetScmIndent(_A.lnum)'
+
 func! scmindent#GetScmIndent(lnum)
-  return luaeval('require("scmindent").GetScmIndent(_A.lnum)', {'lnum': a:lnum})
+  return luaeval(s:scmindentObj, {'lnum': a:lnum})
 endfunc

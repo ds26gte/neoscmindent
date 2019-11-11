@@ -1,7 +1,7 @@
 #! /usr/bin/env lua
 
 -- Dorai Sitaram
--- Last modified 2019-11-10
+-- Last modified 2019-11-11
 
 -- Find if this file is being run within Neovim Lua.
 
@@ -23,9 +23,17 @@ function file_exists(f)
   end
 end
 
-local lwfile = os.getenv('HOME') .. '/.lispwords.lua'
+local lwfile
 
-local lispwords = file_exists(lwfile) and dofile(lwfile) or {}
+if running_in_neovim then
+  lwfile = (os.getenv('NVIM_LISPWORDS') or os.getenv('LISPWORDS'))
+else
+  lwfile = (os.getenv('LISPWORDS') or os.getenv('NVIM_LISPWORDS'))
+end
+
+lwfile = (lwfile or (os.getenv('HOME') .. '/.lispwords.lua'))
+
+local basic_lispwords = (file_exists(lwfile) and dofile(lwfile) or {})
 
 function split_string(s, c)
   local r = {}
@@ -45,9 +53,15 @@ function split_string(s, c)
   return r
 end
 
-function get_lw_option()
+local lispwords
+
+if not running_in_neovim then
+  lispwords = basic_lispwords
+end
+
+function get_lw_option(buf)
   local function get_local_lw_option ()
-    return vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), 'lw')
+    return vim.api.nvim_buf_get_option(buf, 'lw')
   end
   local succeeded, lw = pcall(get_local_lw_option)
   if not succeeded then
@@ -56,8 +70,14 @@ function get_lw_option()
   return lw
 end
 
-function slurp_in_lw()
-  local vimlw = split_string(get_lw_option(), ',')
+local prevailing_filetype
+
+function slurp_in_lw(buf)
+  lispwords = {}
+  for w,n in pairs(basic_lispwords) do
+    lispwords[w] = n
+  end
+  local vimlw = split_string(get_lw_option(buf), ',')
   for _,w in ipairs(vimlw) do
     if not lispwords[w] then
       lispwords[w] = 0
@@ -152,12 +172,11 @@ function num_leading_spaces(s)
   end
 end
 
-function do_indent(curr_buf, pnum, lnum)
+function do_indent(curr_buf, cnum, lnum)
   local default_left_i = -1
   local left_i = 0
   local paren_stack = {}
   local is_inside_string = false
-  local cnum = pnum
   while true do
     local curr_line
     if running_in_neovim then
@@ -273,9 +292,13 @@ local scmindent = {}
 
 if running_in_neovim then
   scmindent.GetScmIndent = function(lnum1)
-    slurp_in_lw()
     local lnum = lnum1 - 1 -- convert to 0-based line number
     local curr_buf = vim.api.nvim_get_current_buf()
+    local curr_filetype = vim.api.nvim_buf_get_option(buf, 'filetype')
+    if curr_filetype ~= prevailing_filetype then
+      prevailing_filetype = curr_filetype
+      slurp_in_lw(curr_buf)
+    end
     --
     -- pnum is determined by going up until you cross two contiguous blank
     -- regions (if possible), then finding the first nonblank after that.
