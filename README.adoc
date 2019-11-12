@@ -2,15 +2,17 @@
 :sectnums:
 :sectnumlevels: 4
 
-Neoscmindent is a Neovim native-Lua implementation of an indenting
-function for Scheme, Lisp, and similar languages.
+Neoscmindent is a code indenter for Lisp and Scheme for the vi
+family of text editors.
 
-This README is written in a way that you start at the top and
+This reference is written in a way that lets you start at the top and
 stop as soon as you have enough to get things working
 sufficiently well for you.
 Read the rest as and when you run into problems or gain interest.
 
 == Installation
+
+If you're using Neovim or Vim:
 
   git clone https://github.com/ds26gte/neoscmindent
   cd neoscmindent
@@ -23,21 +25,25 @@ think you need more control over the installation.
 
 == Indentation strategy
 
-Lisp code is essentially recursive lists of ultimately atoms. We
+Lisp indentation has a tacit, widely accepted convention that is
+not lightly to be messed with. Users of the Emacs editor -- often
+considered the gold standard for Lisp editing -- will
+note that Neoscmindent provides a very similar
+style and customization. (Software teams using both editors will
+be able to collaborate on Lisp files without any indentation
+mismatch.)
+
+Lisp code is essentially recursive _lists_ of ultimately _atoms_. We
 call these code constituents _forms_. A form, if it is a
-non-empty list, has a head subform and zero or more argument
-subforms. Thus:
+non-empty list, has a _head subform_ and zero or more _argument
+subforms_. Thus:
 
   (head-subform arg-subform-1 arg-subform-2 ...)
 
 Indenting Lisp code adds or removes spaces before each line so
 that the code has a quickly readable structure. Indenting does
 not change the content of a code line, and therefore, cannot add
-or remove lines.
-
-Lisp indentation has a tacit, widely accepted convention that is
-not lightly to be messed with. Neoscmindent strives to provide
-the same style and customization as the Emacs editor.
+or remove or collapse lines.
 
 Here are the default rules for how Neoscmindent
 goes about indenting Lisp code:
@@ -133,6 +139,11 @@ If neither environment variable is set and `~/.lispwords.lua`
 doesn't exist, no customization is done. If either of the
 environment variables is set but the thus named file doesn't
 exist, no customization is done.
+
+(There is an intentional difference in the precedence of the
+environment variables depending on which Vim option is used to
+invoke Neoscmindent; we'll get into that later, in the section on
+<<The option `'equalprg'`>>.)
 
 Here is
 an example customization file: It's simply a Lua file that
@@ -257,7 +268,7 @@ With LIN 3, per rules 5a and 5b:
     else2
     ...)
 
-which seems objectively bad. LIN 2 would have, also per rules 5a
+which seems objectively horrid. With LIN 2, also per rules 5a
 and 5b:
 
   (if test
@@ -322,6 +333,8 @@ over:
   cp -p lua/scmindent.lua ~/.config/nvim/lua
   cp -p after/indent/lisp.vim ~/.config/nvim/after/indent
 
+=== `after/indent/lisp.vim`
+
 The `after/indent/lisp.vim` adds to the default indent plugin for
 Scheme and Lisp files some canned stuff that will let
 Neoscmindent do its thing. You may already have such a file, or
@@ -329,13 +342,27 @@ wish to roll your own. In that case, do not copy this file over,
 or if you installed the entire repo under a `'pack'` directory,
 delete this file.
 
-If you want to create or modify your own `after/indent/lisp.vim`, make sure that it
-sets the `'indentexpr'` (aka `'inde'`) option and _unsets_ the
-`'lisp'` and `'equalprg'` (`'ep'`) options:
+If you want to create or modify your own `after/indent/lisp.vim`, make sure
+it does the following:
 
-  setl equalprg=
+1: For Neovim, _unset_ the `'lisp'` and `'equalprg'` (aka `'ep'`)
+options, and set `'indentexpr'` (aka `'inde'`) to the indenting
+function:
+
   setl nolisp
+  setl equalprg=
   setl indentexpr=scmindent#GetScmIndent(v:lnum)
+
+2: For Vim, _unset_ the `'lisp'` option and set `'equalprg'` to
+`scmindent.lua` as a filter:
+
+  setl nolisp
+  setl equalprg=scmindent.lua
+
+If `scmindent.lua` is not in your `PATH`,
+use an explicit pathname, e.g.,
+
+  setl equalprg=~/.config/nvim/lua/scmindent.lua
 
 If you're wondering why you don't need an
 `after/indent/scheme.vim`, this is because Vim's
@@ -346,14 +373,25 @@ their specific `after/indent` file.
 
 You can avoid an `after` file by explicitly assigning these
 options via a filetype autocommand, either in your `init.vim`
-or in a regular plugin file in your `plugin` directory:
+or in a regular plugin file in your `plugin` directory, e.g.,
 
   autocmd filetype scheme,lisp
-     \ setl ep= nolisp inde=scmindent#GetScmIndent(v:lnum)
+     \ setl nolisp ep= inde=scmindent#GetScmIndent(v:lnum)
+
+or
+
+  autocmd filetype scheme,lisp
+     \ setl nolisp ep=scmindent.lua
 
 Again, add other filetypes to the command above as needed.
 
-=== A note on `'lisp'` and `'equalprg'`
+=== A tale of three options: `'lisp'`, `'equalprg'`, and `'indentexpr'`
+
+Because of vi's tortuous history, there are now three competing
+options that control Lisp
+indentation: `'lisp'` and '`equalprg'` are available in all
+members of the vi text-editor family,
+whereas `'indentexpr'` is available only in Vim and Neovim.
 
 There are two aspects to indentation:
 
@@ -362,31 +400,29 @@ type it.
 
 2. _Re_-indentation, or using the `=` command (in normal mode) to
 re-indent a contiguous region of one or more lines, called a
-_range_ in Vim parlance. You can also use `==` to indent the
+_range_ in Vim parlance. You can also use `==` to indent just the
 current line.
 
-The options `'lisp'` and `'equalprg'` compete with `'indentexpr'` for
-indenting a file, and therefore in our default setup we unset
-them. This ensures that `'indentexpr'`
+The options `'lisp'` and `'equalprg'` are less featureful
+than `'indentexpr'`.
+Since the options compete for precedence in byzantine ways, in
+our default setup for Neovim, we simply unset `'lisp'` and `'equalprg'`.
+This ensures that `'indentexpr'`
 is solely responsible for both aspects of indentation, which is usually what
 we want.
 
 Sometimes, though, it may make sense to choose `'equalprg'`
-over `'indentexpr'`, or, in rare situations, to even set both. To
-understand why this should be, we need some history:
-
-The options `'lisp'` and `'equalprg'` provide alternative, less
-featureful ways than `'indentexpr'` to indent Lisp in the vi family of editors.
+over `'indentexpr'`, or, in rare situations, to even set both.
 
 Here's how the precedence between the three options shakes out:
 
 - Autoindentation: `lisp > indentexpr`
-- Reindentation: `equalprg > lisp > indentexpr`
+- Re-indentation: `equalprg > lisp > indentexpr`
 
 ==== The option `'lisp'`
 
 Typically, the options `'lisp'` and
-`'showmatch'` (`'sm'`) are set together.
+`'showmatch'` (aka `'sm'`) are set together.
 Assuming `'equalprg'` and `'indentexpr'` are unset,  `'lisp'` takes care
 of both auto- and re-indentation.
 Except in the improved vi
@@ -407,9 +443,9 @@ ways]. Neovim inherits this legacy.
 
 ==== The option `'equalprg'`
 
-Fortunately, both vi and Vim let you delegate the responsibility
+Fortunately, vi (including Vim and Neovim) lets you delegate the responsibility
 for re-indentation to an external filter program of your
-choosing. The option used is `'equalprg'`, so named because it determines
+choosing. The option used is `'equalprg'`, so called because it determines
 the
 program used for the `=` command.
 
@@ -418,33 +454,31 @@ Indeed, you can use the
 
   setl equalprg=scmindent.lua
 
-(This is a local `set` done only for the desired filetypes, typically `lisp` and
-`scheme`. You can either enter this in an `indent` file for these
-filetypes, or prefix it with `autocmd filetype lisp,scheme`.)
+as described above.
+(This is a local `set` used by Vim/Neovim, and is either used in
+an `indent` file, or in a general plugin file, inside a
+filetype-specific autocommand.
+For vi's other than Vim/Neovim, you would just use `set`.)
 
-If `scmindent.lua` is not in your `PATH`,
-use an explicit pathname, e.g.,
-
-  setl equalprg=~/.config/nvim/lua/scmindent.lua
-
-For this to work, you must have Lua on your system.
-If not, you can consult Neoscmindent's parent software,
+To use `scmindent.lua` as a filter,
+you must have Lua on your system.
+If you can't install Lua, you can consult Neoscmindent's parent software,
 https://github.com/ds26gte/scmindent, which provides a choice of
 `'equalprg'` filters
-in different languages.
+in various languages.
 
 Setting `'equalprg'` only affects re-indentation. If `'lisp'` is
 set, it still governs autoindentation, which can be confusing as
 the two options in general yield different results, and we
-already know `'lisp'`'s algorithm is faulty. So it's best
+already know ``'lisp'```'s algorithm is faulty. So it's best
 to unset it:
 
   setl nolisp
 
 While this works, the
-experience is clunkier than using `'indentexpr'`, because lines
+experience is clunky because lines
 aren't autoindented -- and if they are, presumably because of
-`'autoindent'` (aka `'ai'`) setting, the indenting is very
+an `'autoindent'` (aka `'ai'`) setting, the indenting is very
 un-Lisp-like.
 To get your code correctly indented, you
 have to constantly remember to re-indent _non_-automatically, by
@@ -466,12 +500,23 @@ function takes for granted. In general, the customization file
 used for `'equalprg'` will be larger than the one for
 `'indentexpr'`, because the latter doesn't need to mention any
 of the `'lispwords'`, unless it wants to give them a LIN
-that isn't 0.
+≠ 0.
 
-In contrast to `'equalprg'`, the approach using `'indentexpr'` offers the least friction. It
-does require that you use Neovim, not Vim, let alone any other
-vi. If you're not running Neovim, using `'equalprg'` is the best
-option.
+==== The option `'indentexpr'`
+
+In contrast to `'equalprg'`, the approach using `'indentexpr'` offers the least friction.
+It works as a filter _and_ also automatically indents your code as
+you type it.  To let `'indentexpr'` do both these tasks, you must
+unset `'lisp'` and `'equalprg'`, as we've already described.
+
+While `'indentexpr'` is the superior option, our setting for it
+only works in Neovim, as it relies on the native Lua of this
+text editor. It will not work in Vim. It won't work in other vi's
+either, because they don't have the `'indentexpr'` option.
+
+The `after/indent/lisp.vim` included in this repo
+works for both Vim and Neovim. It sets
+`'equalprg'` for Vim and `'indentexpr'` for Neovim.
 
 ==== Can you use both `'equalprg'` and `'indentexpr'`?
 
@@ -492,25 +537,28 @@ possible to set `'equalprg'` to some other filter, but that
 risks a mismatch between the results produced
 by autoindentation versus re-indentation.)
 
-===== Unset `'lisp'` always!
+==== Unset `'lisp'` always!
 
 `'lisp'` overrides `'indentexpr'` for both autoindentation and
-re-indentation, so it's never advisable to set `'lisp'` if
-`'indentexpr'` is set.
+re-indentation (arguably a design bug in Vim!), so
+it's never advisable to set `'lisp'` if `'indentexpr'` is set.
+
 If `'equalprg'` is set, then `'lisp'` only overrides it for
 autoindentation, but this is not terribly useful since the
-manual indentation by `'equalprg'` will be used to correct
-`'lisp'`'s faulty autoindentation anyway. In essence, `'lisp'`
+manual indentation by `'equalprg'` will have to be used to correct
+``'lisp'```'s faulty autoindentation anyway.
+
+In essence, `'lisp'`
 doesn't play nice with either `'equalprg'` or `'indentexpr'`, and
-when either or both of these are present, it's best to simply
+when either or both of these are set, it's best to simply
 unset `'lisp'`.
 
-There is one non-indentation benefit conferred by `'lisp'`,
-and that is to allow keywords to contain `-`, the hyphen
-character (aka dash,
-minus). This is mildly useful, given Lisp identifiers
+There _is_ one non-indentation benefit conferred by `'lisp'`,
+and that is that it allows keywords to contain `-`, the hyphen
+character (aka _dash_,
+_minus_). This is mildly useful, given Lisp identifiers
 can and often do have hyphens, but setting the `'iskeyword'` (aka
 `'isk'`)
 option is a much better way to get this done.
 
-// Last modified 2019-11-11
+// Last modified 2019-11-12

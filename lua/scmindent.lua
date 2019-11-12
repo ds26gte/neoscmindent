@@ -1,7 +1,7 @@
 #! /usr/bin/env lua
 
 -- Dorai Sitaram
--- Last modified 2019-11-11
+-- Last modified 2019-11-12
 
 -- Find if this file is being run within Neovim Lua.
 
@@ -83,10 +83,6 @@ function slurp_in_lw(buf)
       lispwords[w] = 0
     end
   end
-end
-
-function string_trim_blanks(s)
-  return string.gsub(string.gsub(s, '^%s+', ''), '%s+$', '')
 end
 
 function is_literal_token(s)
@@ -210,7 +206,7 @@ function do_indent(curr_buf, cnum, lnum)
     if running_in_neovim and cnum == lnum then
       return curr_left_i
     end
-    curr_line = string_trim_blanks(curr_line)
+    curr_line = curr_line:gsub('^%s+', ''):gsub('%s+$', '')
     if not running_in_neovim then
       io.write(string.rep(' ', curr_left_i), curr_line, '\n')
     end

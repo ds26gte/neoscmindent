@@ -1,4 +1,4 @@
-" Last modified 2018-09-12
+" Last modified 2019-11-12
 " Dorai Sitaram
 
 " This after/indent file is offered for convenience. In a typical
@@ -12,8 +12,19 @@
 " in your own way.
 
 if has('nvim')
+  " if using Neovim, use the indenting function from scmindent.lua
   setl ep=
   setl inde=scmindent#GetScmIndent(v:lnum)
-  setl lw-=if
-  setl nolisp
+else
+  " if not in Neovim, we can only use scmindent.lua as a filter
+  exec 'setl ep=' . expand('<sfile>:h') . '/../../lua/scmindent.lua'
 endif
+
+" removing `if` from 'lw' gives it an LIN of -1.
+" This gives `if` its statistically most popular indentation.
+
+setl lw-=if
+
+" 'lisp' intereferes with both 'ep' and 'inde', so unset it
+
+setl nolisp
