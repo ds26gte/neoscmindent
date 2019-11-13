@@ -1,0 +1,84 @@
+*neoscmindent.txt* Indenting Scheme and Lisp files
+
+                    *scmindent* *scmindent.lua* *scmindent.vim* *GetScmIndent*
+
+The function scmindent#GetScmIndent() is an Neovim indenter for Scheme and
+Lisp code. For files whose code you want enable this indenter on, set
+'indentexpr' to this function: >
+        setl inde=scmindent#GetScmIndent(v:lnum)
+
+This can be done either with a |FileType| autocommand, or via a filetype or
+indent plugin.
+
+Also, ensure that the option 'lisp' is not set, and that the option 'equalprg'
+is empty, as these override 'indentexpr'.
+
+You may set 'equalprg' to scmindent.lua if you're using Vim rather than
+Neovim, or if you wish to override 'inde' only for filtering using |=|: >
+        setl ep=scmindent.lua
+
+(You may use a full pathname or put scmindent.lua in your $PATH.)
+
+                                                          *lisp-indent-number*
+
+The indenting approach associates a Lisp Indent Number (LIN) with each
+keyword. Consider an expression >
+        (quayword sform1 sform2 ...)
+
+where quayword's LIN is N.
+
+If the expression isn't split across lines, then the subforms need no
+indentation.
+
+If the expression is split across lines, such that the i'th subform, sformi,
+starts a new line, then the new line is indented differently depending on
+N:
+
+1. If i <= N, then sformi is indented 3 columns past (the beginning of)
+quayword.
+
+2. If i > N, then sform is indented just one column past (the beginning of)
+quayword.
+
+For more information about the indentation strategy, please see the
+documentation included in the repository.
+
+LINs can be assigned in a customization file. The name of the customization
+file is the first available of the following:
+
+                                                *$NVIM_LISPWORDS* *$LISPWORDS*
+
+- the value of the environment variable $NVIM_LISPWORDS, if set
+- the value of the environment variable $LISPWORDS, if set
+- ~/.lispwords.lua
+
+If neither environment variable is set and ~/.lispwords.lua doesn't exist, no
+customization is done. If either of the environment variables is set but the
+thus named file doesn't exist, no customization is done.
+
+The customization file is a Lua file that returns a table associating keywords
+with LINs, e.g., >
+        return {
+          ['call-with-input-file'] = 1,
+          ['case'] = 1,
+          ['do'] = 2,
+          ['do*'] = 2,
+          ['fluid-let'] = 1,
+          ['lambda'] = 1,
+          ['let'] = 1,
+          ['let*'] = 1,
+          ['letrec'] = 1,
+          ['let-values'] = 1,
+          ['unless'] = 1,
+          ['when'] = 1,
+        }
+
+If a keyword is not in the cust file, it is checked to see if it's present in
+the 'lispwords' option. If so, its LIN is taken to be 0.
+
+If a keyword is neither in the cust file nor in 'lispwords', but starts with
+'def' (e.g., defxyzproc, def-xyz-proc), then its LIN is taken to be 0.
+
+All other keywords are deemed to have a LIN of -1. 
+
+vi:ft=help
