@@ -1,13 +1,22 @@
-# last modified 2019-11-09
+# last modified 2019-11-13
 # Dorai Sitaram
 
-if test ! -d ~/.config/nvim; then
-  echo Your Neovim setup is unusual. Please see README.adoc
-  echo on how to install neoscmindent for your system.
-  exit
+VICONFIGDIR=${XDG_CONFIG_HOME:-~/.config}/nvim
+
+if test ! -d $VICONFIGDIR; then
+  echo You don\'t appear to be using Neovim\; trying Vim...
+  if test ! -d ~/.vim; then
+    echo You don\'t appear to be using Vim either.
+    echo Please see README.adoc on how to install neoscmindent
+    echo on your system.
+    exit
+  else
+    echo You appear to be using Vim.
+    export VICONFIGDIR=~/.vim
+  fi
 fi
 
-PACKDIR=~/.config/nvim/pack/3rdpartyplugins/start
+PACKDIR=$VICONFIGDIR/pack/3rdpartyplugins/start
 
 mkdir -p $PACKDIR
 
