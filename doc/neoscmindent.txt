@@ -5,6 +5,7 @@
 The function scmindent#GetScmIndent() is an Neovim indenter for Scheme and
 Lisp code. For files whose code you want enable this indenter on, set
 'indentexpr' to this function: >
+
         setl inde=scmindent#GetScmIndent(v:lnum)
 
 This can be done either with a |FileType| autocommand, or via a filetype or
@@ -15,6 +16,7 @@ is empty, as these override 'indentexpr'.
 
 You may set 'equalprg' to scmindent.lua if you're using Vim rather than
 Neovim, or if you wish to override 'inde' only for filtering using |=|: >
+
         setl ep=scmindent.lua
 
 (You may use a full pathname or put scmindent.lua in your $PATH.)
@@ -23,6 +25,7 @@ Neovim, or if you wish to override 'inde' only for filtering using |=|: >
 
 The indenting approach associates a Lisp Indent Number (LIN) with each
 keyword. Consider an expression >
+
         (quayword sform1 sform2 ...)
 
 where quayword's LIN is N.
@@ -58,6 +61,7 @@ thus named file doesn't exist, no customization is done.
 
 The customization file is a Lua file that returns a table associating keywords
 with LINs, e.g., >
+
         return {
           ['call-with-input-file'] = 1,
           ['case'] = 1,
@@ -79,6 +83,6 @@ the 'lispwords' option. If so, its LIN is taken to be 0.
 If a keyword is neither in the cust file nor in 'lispwords', but starts with
 'def' (e.g., defxyzproc, def-xyz-proc), then its LIN is taken to be 0.
 
-All other keywords are deemed to have a LIN of -1. 
+All other keywords are deemed to have a LIN of -1.
 
 vi:ft=help

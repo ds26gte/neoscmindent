@@ -1,4 +1,4 @@
-" Last modified 2019-11-12
+" Last modified 2019-11-13
 " Dorai Sitaram
 
 " This after/indent file is offered for convenience. In a typical
@@ -18,6 +18,14 @@ if has('nvim')
 else
   " if not in Neovim, we can only use scmindent.lua as a filter
   exec 'setl ep=' . expand('<sfile>:h') . '/../../lua/scmindent.lua'
+endif
+
+if empty($NVIM_LISPWORDS)
+  let $NVIM_LISPWORDS = expand('<sfile>:h') . '/../../.lispwords.lua'
+endif
+
+if empty($LISPWORDS)
+  let $LISPWORDS = expand('<sfile>:h') . '/../../.lispwords-ep.lua'
 endif
 
 " removing `if` from 'lw' gives it an LIN of -1.

@@ -140,6 +140,11 @@ doesn't exist, no customization is done. If either of the
 environment variables is set but the thus named file doesn't
 exist, no customization is done.
 
+The repo includes sample customization files, and the quick
+install takes care to set the environment variables (within the
+editor, not in your global shell environment). You can modify to
+taste.
+
 (There is an intentional difference in the precedence of the
 environment variables depending on which Vim option is used to
 invoke Neoscmindent; we'll get into that later, in the section on
@@ -561,4 +566,4 @@ can and often do have hyphens, but setting the `'iskeyword'` (aka
 `'isk'`)
 option is a much better way to get this done.
 
-// Last modified 2019-11-12
+// Last modified 2019-11-13
