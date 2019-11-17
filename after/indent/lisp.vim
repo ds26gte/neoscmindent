@@ -1,4 +1,4 @@
-" Last modified 2019-11-13
+" Last modified 2019-11-17
 " Dorai Sitaram
 
 " This after/indent file is offered for convenience. In a typical
@@ -16,17 +16,37 @@ if has('nvim')
   setl ep=
   setl inde=scmindent#GetScmIndent(v:lnum)
 else
-  " if not in Neovim, we can only use scmindent.lua as a filter
-  exec 'setl ep=' . expand('<sfile>:h') . '/../../lua/scmindent.lua'
+  " if not in Neovim, we can only use one of the filters
+  if executable('lua')
+    exec 'setl ep=' . expand('<sfile>:h') . '/../../lua/scmindent.lua'
+    if empty($LISPWORDS)
+      let $LISPWORDS = expand('<sfile>:h') . '/../../customization/.lispwords.lua'
+    endif
+
+  elseif executable('racket')
+    exec 'setl ep=' . expand('<sfile>:h') . '/../../filter/scmindent.rkt'
+    if empty($LISPWORDS)
+      let $LISPWORDS = expand('<sfile>:h') . '/../../customization/.lispwords'
+    endif
+
+  elseif executable('ecl') || !empty($LISP)
+    exec 'setl ep=' . expand('<sfile>:h') . '/../../filter/lispindent.lisp'
+    if empty($LISPWORDS)
+      let $LISPWORDS = expand('<sfile>:h') . '/../../customization/.lispwords'
+    endif
+
+  elseif executable('js')
+    exec 'setl ep=' . expand('<sfile>:h') . '/../../filter/scmindent.js'
+    if empty($LISPWORDS)
+      let $LISPWORDS = expand('<sfile>:h') . '/../../customization/lispwords.json'
+    endif
+  endif
 endif
 
 if empty($NVIM_LISPWORDS)
-  let $NVIM_LISPWORDS = expand('<sfile>:h') . '/../../.lispwords.lua'
+  let $NVIM_LISPWORDS = expand('<sfile>:h') . '/../../customization/lispwords.nvim'
 endif
 
-if empty($LISPWORDS)
-  let $LISPWORDS = expand('<sfile>:h') . '/../../.lispwords-ep.lua'
-endif
 
 " removing `if` from 'lw' gives it an LIN of -1.
 " This gives `if` its statistically most popular indentation.
