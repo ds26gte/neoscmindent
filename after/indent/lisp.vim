@@ -44,7 +44,7 @@ else
 endif
 
 if empty($NVIM_LISPWORDS)
-  let $NVIM_LISPWORDS = expand('<sfile>:h') . '/../../customization/lispwords.nvim'
+  let $NVIM_LISPWORDS = expand('<sfile>:h') . '/../../customization/nvimlispwords.lua'
 endif
 
 
