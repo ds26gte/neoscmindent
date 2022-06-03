@@ -293,7 +293,7 @@ if running_in_neovim then
   scmindent.GetScmIndent = function(lnum1)
     local lnum = lnum1 - 1 -- convert to 0-based line number
     local curr_buf = vim.api.nvim_get_current_buf()
-    local curr_filetype = vim.api.nvim_buf_get_option(buf, 'filetype')
+    local curr_filetype = vim.api.nvim_buf_get_option(curr_buf, 'filetype')
     if curr_filetype ~= prevailing_filetype then
       prevailing_filetype = curr_filetype
       slurp_in_lw(curr_buf)
