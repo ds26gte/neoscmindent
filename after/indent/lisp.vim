@@ -1,4 +1,4 @@
-" Last modified 2020-02-01
+" Last modified 2022-08-06
 " Dorai Sitaram
 
 " This after/indent file is offered for convenience. In a typical
@@ -22,13 +22,13 @@ else
   endif
 endif
 
-if empty($NVIM_LISPWORDS)
-  let $NVIM_LISPWORDS = expand('<sfile>:h') . '/../../customization/nvimlispwords.lua'
-endif
-
-if empty($LISPWORDS)
-  let $LISPWORDS = expand('<sfile>:h') . '/../../customization/.lispwords.lua'
-endif
+" if empty($NVIM_LISPWORDS)
+"  let $NVIM_LISPWORDS = expand('<sfile>:h') . '/../../customization/nvimlispwords.lua'
+" endif
+"
+" if empty($LISPWORDS)
+"   let $LISPWORDS = expand('<sfile>:h') . '/../../customization/.lispwords.lua'
+" endif
 
 " removing `if` from 'lw' gives it a LIN of -1.
 " This gives `if` its statistically most popular indentation.
