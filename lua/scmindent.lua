@@ -1,7 +1,7 @@
 #! /usr/bin/env lua
 
 -- Dorai Sitaram
--- Last modified 2020-11-14
+-- Last modified 2022-08-07
 
 -- Find if this file is being run within Neovim Lua.
 
@@ -298,33 +298,7 @@ if running_in_neovim then
       prevailing_filetype = curr_filetype
       slurp_in_lw(curr_buf)
     end
-    --
-    -- pnum is determined by going up until you cross two contiguous blank
-    -- regions (if possible), then finding the first nonblank after that.
-    --
-    local pnum = lnum - 1
-    if pnum < 0 then pnum = 0 end
-    local one_blank_seen = false
-    local currently_blank = false
-    while pnum > 0 do
-      local pstr = vim.api.nvim_buf_get_lines(curr_buf, pnum, pnum+1, 1)[1]
-      if pstr:match("^%s*$") then
-        if currently_blank then
-          do end
-        elseif one_blank_seen then
-          pnum = pnum + 1
-          break
-        else
-          currently_blank = true
-          one_blank_seen = true
-        end
-      else
-        currently_blank = false
-      end
-      pnum = pnum - 1
-    end
-    --
-    return do_indent(curr_buf, pnum, lnum)
+    return do_indent(curr_buf, 0, lnum)
   end
 end
 
